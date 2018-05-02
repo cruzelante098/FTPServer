@@ -1,3 +1,7 @@
+# Carpetas con archivos de compilaci√n que no necesitamos
+.idea/
+cmake-build-debug/
+
 # Prerequisites
 *.d
 
