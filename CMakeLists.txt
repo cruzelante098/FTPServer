@@ -3,8 +3,8 @@ project(FTPServer)
 
 set(CMAKE_CXX_STANDARD 17)
 
-set(SOURCE_FILES main.cpp)
-set(HEADER_FILES )
+set(SOURCE_FILES src/ClientConnection.cpp src/MainFTPServerApp.cpp src/FTPServer.cpp)
+set(HEADER_FILES include/ClientConnection.h include/common.h include/FTPServer.h)
 
 include_directories(include/)
 
