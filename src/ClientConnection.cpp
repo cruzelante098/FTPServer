@@ -11,47 +11,46 @@
 
 ClientConnection::ClientConnection(int s)
 {
-	int sock = (int) (s);
+    auto sock = (int) (s);
+    char buffer[MAX_BUFF];
+    control_socket = s;
 
-	char buffer[MAX_BUFF];
+    // TODO: Check the Linux man pages to know what fdopen does.
+    fd = fdopen(s, "a+");
 
-	control_socket = s;
-	// Check the Linux man pages to know what fdopen does.
-	fd = fdopen(s, "a+");
-	if (fd == nullptr)
-	{
-		std::cout << "Connection closed" << std::endl;
+    if (fd == nullptr)
+    {
+        std::cout << "Connection closed" << std::endl;
+        fclose(fd);
+        close(control_socket);
+        ok = false;
+        return;
+    }
 
-		fclose(fd);
-		close(control_socket);
-		ok = false;
-		return;
-	}
-
-	ok = true;
-	data_socket = -1;
+    ok = true;
+    data_socket = -1;
 }
 
 
 ClientConnection::~ClientConnection()
 {
-	fclose(fd);
-	close(control_socket);
+    fclose(fd);
+    close(control_socket);
 }
 
 
 int connect_TCP(uint32_t address, uint16_t port)
 {
-	// TODO: Implement your code to define a socket here
-	return -1; // You must return the socket descriptor.
+    // TODO: Implement your code to define a socket here
+    return -1; // TODO: You must return the socket descriptor.
 }
 
 
 void ClientConnection::stop()
 {
-	close(data_socket);
-	close(control_socket);
-	parar = true;
+    close(data_socket);
+    close(control_socket);
+    exit = true;
 }
 
 /**
@@ -61,72 +60,71 @@ void ClientConnection::stop()
  * If you think that you have to add other commands feel free to do so. You
  * are allowed to add auxiliary methods if necessary.
  */
-void ClientConnection::WaitForRequests()
+void ClientConnection::waitForRequests()
 {
-	if (!ok)
-	{
-		return;
-	}
-	fprintf(fd, "220 Service ready\n");
-	while (!parar)
-	{
-		fscanf(fd, "%s", command);
-		if (COMMAND("USER"))
-		{
-			fscanf(fd, "%s", arg);
-			fprintf(fd, "331 User name ok, need password\n");
-		}
-		else if (COMMAND("PWD"))
-		{
+    if (!ok)
+        return;
 
-		}
-		else if (COMMAND("PASS"))
-		{
+    fprintf(fd, "220 Service ready\n");
+    while (!exit)
+    {
+        fscanf(fd, "%s", command);
+        if (COMMAND("USER")) // Identifica al usuario con su username
+        {
+            fscanf(fd, "%s", arg);
+            fprintf(fd, "331 User name ok, need password\n");
+        }
+        else if (COMMAND("PWD")) // Imprime el directorio de trabajo donde actualmente se encuentra el usuario
+        {
 
-		}
-		else if (COMMAND("PORT"))
-		{
+        }
+        else if (COMMAND("PASS")) //
+        {
 
-		}
-		else if (COMMAND("PASV"))
-		{
+        }
+        else if (COMMAND("PORT"))
+        {
 
-		}
-		else if (COMMAND("CWD"))
-		{
+        }
+        else if (COMMAND("PASV"))
+        {
 
-		}
-		else if (COMMAND("STOR"))
-		{
+        }
+        else if (COMMAND("CWD"))
+        {
 
-		}
-		else if (COMMAND("SYST"))
-		{
+        }
+        else if (COMMAND("STOR"))
+        {
 
-		}
-		else if (COMMAND("TYPE"))
-		{
+        }
+        else if (COMMAND("SYST"))
+        {
 
-		}
-		else if (COMMAND("RETR"))
-		{
+        }
+        else if (COMMAND("TYPE"))
+        {
 
-		}
-		else if (COMMAND("QUIT"))
-		{
+        }
+        else if (COMMAND("RETR"))
+        {
 
-		}
-		else if (COMMAND("LIST"))
-		{
+        }
+        else if (COMMAND("QUIT"))
+        {
 
-		}
-		else
-		{
-			fprintf(fd, "502 Command not implemented.\n");
-			fflush(fd);
-			printf("Comando : %s %s\n", command, arg);
-			printf("Error interno del servidor\n"); // TODO: sustituir por salida de error
-		}
-	}
-	fclose(fd);
+        }
+        else if (COMMAND("LIST"))
+        {
+
+        }
+        else
+        {
+            fprintf(fd, "502 Command not implemented.\n");
+            fflush(fd);
+            printf("Comando : %s %s\n", command, arg);
+            printf("Error interno del servidor\n"); // TODO: sustituir por salida de error
+        }
+    }
+    fclose(fd);
 };

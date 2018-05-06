@@ -1,5 +1,5 @@
-#ifndef ClientConnection_H
-#define ClientConnection_H
+#ifndef CLIENT_CONNECTION_H
+#define CLIENT_CONNECTION_H
 
 #include <pthread.h>
 
@@ -28,35 +28,49 @@
 #include <iostream>
 #include <dirent.h>
 
-#include "common.h"
+#include "Common.h"
 
 #define COMMAND(cmd) strcmp(command, cmd)==0
 
-const int MAX_BUFF=1000;
+const int MAX_BUFF = 1000; ///< TODO: doc
 
-class ClientConnection {
+class ClientConnection
+{
 public:
+    /**
+     * TODO: doc
+     * @param s
+     */
     explicit ClientConnection(int s);
+
     ~ClientConnection();
-    
-    void WaitForRequests();
+
+    /**
+     * TODO: doc
+     */
+    void waitForRequests();
+
+    /**
+     * TODO: doc
+     */
     void stop();
 
-private:  
-   bool ok;  // This variable is flag that avois that the
-	     // server listens if initialization errors occured.
-    
-    FILE *fd;	 // C file descriptor. We use it to buffer the
-		 // control connection of the socket and allows to
-		 // manage it as a C file usign fprintf, fscanf, etc.
+private:
 
-    char command[MAX_BUFF];  // Buffer for saving the command.
-    char arg[MAX_BUFF];      // Buffer for saving the arguments. 
-    
-    int data_socket;         // Data socket descriptor;
-    int control_socket;      // Control socket descriptor;
-    
-    bool parar;
+    /**
+     * C file descriptor. We use it to buffer the control connection of the socket and allows to
+     * manage it as a C file usign fprintf, fscanf, etc.
+     */
+    FILE* fd;
+
+    char command[MAX_BUFF];  ///< Buffer for saving the command.
+    char arg[MAX_BUFF];      ///< Buffer for saving the arguments.
+
+    int data_socket;         ///< Data socket descriptor;
+    int control_socket;      ///< Control socket descriptor;
+
+    bool ok; ///< This variable is flag that avoid that the server listens if initialization errors occured.
+    bool exit;
 };
 
 #endif
