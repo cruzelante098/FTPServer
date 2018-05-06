@@ -9,17 +9,15 @@
 
 #include "ClientConnection.h"
 
-ClientConnection::ClientConnection(int s)
-{
-    auto sock = (int) (s);
+ClientConnection::ClientConnection(int s) {
+    auto sock = s;
     char buffer[MAX_BUFF];
     control_socket = s;
 
     // TODO: Check the Linux man pages to know what fdopen does.
     fd = fdopen(s, "a+");
 
-    if (fd == nullptr)
-    {
+    if (fd == nullptr) {
         std::cout << "Connection closed" << std::endl;
         fclose(fd);
         close(control_socket);
@@ -32,22 +30,19 @@ ClientConnection::ClientConnection(int s)
 }
 
 
-ClientConnection::~ClientConnection()
-{
+ClientConnection::~ClientConnection() {
     fclose(fd);
     close(control_socket);
 }
 
 
-int connect_TCP(uint32_t address, uint16_t port)
-{
+int connect_TCP(uint32_t address, uint16_t port) {
     // TODO: Implement your code to define a socket here
     return -1; // TODO: You must return the socket descriptor.
 }
 
 
-void ClientConnection::stop()
-{
+void ClientConnection::stop() {
     close(data_socket);
     close(control_socket);
     exit = true;
@@ -60,66 +55,42 @@ void ClientConnection::stop()
  * If you think that you have to add other commands feel free to do so. You
  * are allowed to add auxiliary methods if necessary.
  */
-void ClientConnection::waitForRequests()
-{
+void ClientConnection::waitForRequests() {
     if (!ok)
         return;
 
     fprintf(fd, "220 Service ready\n");
-    while (!exit)
-    {
+    while (!exit) {
         fscanf(fd, "%s", command);
         if (COMMAND("USER")) // Identifica al usuario con su username
         {
             fscanf(fd, "%s", arg);
             fprintf(fd, "331 User name ok, need password\n");
-        }
-        else if (COMMAND("PWD")) // Imprime el directorio de trabajo donde actualmente se encuentra el usuario
+        } else if (COMMAND("PWD")) // Imprime el directorio de trabajo donde actualmente se encuentra el usuario
         {
 
-        }
-        else if (COMMAND("PASS")) //
+        } else if (COMMAND("PASS")) //
         {
 
-        }
-        else if (COMMAND("PORT"))
-        {
+        } else if (COMMAND("PORT")) {
 
-        }
-        else if (COMMAND("PASV"))
-        {
+        } else if (COMMAND("PASV")) {
 
-        }
-        else if (COMMAND("CWD"))
-        {
+        } else if (COMMAND("CWD")) {
 
-        }
-        else if (COMMAND("STOR"))
-        {
+        } else if (COMMAND("STOR")) {
 
-        }
-        else if (COMMAND("SYST"))
-        {
+        } else if (COMMAND("SYST")) {
 
-        }
-        else if (COMMAND("TYPE"))
-        {
+        } else if (COMMAND("TYPE")) {
 
-        }
-        else if (COMMAND("RETR"))
-        {
+        } else if (COMMAND("RETR")) {
 
-        }
-        else if (COMMAND("QUIT"))
-        {
+        } else if (COMMAND("QUIT")) {
 
-        }
-        else if (COMMAND("LIST"))
-        {
+        } else if (COMMAND("LIST")) {
 
-        }
-        else
-        {
+        } else {
             fprintf(fd, "502 Command not implemented.\n");
             fflush(fd);
             printf("Comando : %s %s\n", command, arg);

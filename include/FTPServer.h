@@ -5,13 +5,13 @@
 
 #include "ClientConnection.h"
 
-class FTPServer
-{
+class FTPServer {
 public:
 
-    explicit FTPServer(int port = 21);
+    explicit FTPServer(int port = 2121);
 
     void run();
+
     void stop();
 
 private:
@@ -19,7 +19,7 @@ private:
     int port;
     int msock;
 
-    std::list<ClientConnection*> connection_list;
+    std::list<ClientConnection *> connection_list;
 };
 
 #endif

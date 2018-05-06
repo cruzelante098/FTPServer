@@ -34,8 +34,7 @@
 
 const int MAX_BUFF = 1000; ///< TODO: doc
 
-class ClientConnection
-{
+class ClientConnection {
 public:
     /**
      * TODO: doc
@@ -61,7 +60,7 @@ private:
      * C file descriptor. We use it to buffer the control connection of the socket and allows to
      * manage it as a C file usign fprintf, fscanf, etc.
      */
-    FILE* fd;
+    FILE *fd;
 
     char command[MAX_BUFF];  ///< Buffer for saving the command.
     char arg[MAX_BUFF];      ///< Buffer for saving the arguments.
