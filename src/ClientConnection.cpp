@@ -9,16 +9,14 @@
 
 #include "ClientConnection.h"
 
-ClientConnection::ClientConnection(int socket_id) {
-	auto sock = socket_id; // TODO: para que es esto?
+ClientConnection::ClientConnection(int socket_id) : control_socket(socket_id) {
 	char buffer[MAX_BUFF];
-	control_socket = socket_id;
 
 	// TODO: Check the Linux man pages to know what fdopen does.
 	fd = fdopen(socket_id, "a+");
 
 	if (fd == nullptr) {
-		std::cout << "Connection closed" << std::endl;
+		std::cerr << "Connection closed" << std::endl;
 		fclose(fd);
 		close(control_socket);
 		ok = false;
@@ -31,12 +29,12 @@ ClientConnection::ClientConnection(int socket_id) {
 
 
 ClientConnection::~ClientConnection() {
-	fclose(fd);
-	close(control_socket);
+	this->stop();
 }
 
 
 void ClientConnection::stop() {
+	fclose(fd);
 	close(data_socket);
 	close(control_socket);
 	exit = true;
@@ -53,48 +51,53 @@ void ClientConnection::waitForRequests() {
 	if (!ok)
 		return;
 
-	fprintf(fd, "220 Service ready\n");
-
+	fprintf(fd, "220 Service ready.\n");
+	//	login();
+	// TODO: meter en funciones
 	while (!exit) {
 		fscanf(fd, "%s", command);
 		if (COMMAND("USER")) {
-			// Identifica al usuario con su username
 			fscanf(fd, "%s", arg);
-			fprintf(fd, "331 User name ok, need password\n");
+			fprintf(fd, "331 User name ok, need password.\n");
 		} else if (COMMAND("PWD") || COMMAND("XPWD")) {
-			// Imprime el directorio de trabajo donde actualmente se encuentra el usuario
 			char cwd[200];
-			if(!getcwd(cwd, 200))
-				fprintf(fd, "550 Requested action not taken\n");
-			else
-				fprintf(fd, "%s\n", cwd);
+			if (!getcwd(cwd, 200)) {
+				fprintf(fd, "550 Requested action not taken.\n");
+				std::cerr << "ERROR: PWD: " << strerror(errno) << std::endl;
+			} else
+				fprintf(fd, "257 \"%s\" is the current directory.\n", cwd);
 		} else if (COMMAND("PASS")) {
 			fscanf(fd, "%s", arg);
-			fprintf(fd, "230 User logged in, proceed\n");
-		} else if (COMMAND("PORT")) {
+			fprintf(fd, "230 User logged in, proceed.\n");
+		} else if (COMMAND("PORT")) { // Fran
 
-		} else if (COMMAND("PASV")) {
+		} else if (COMMAND("PASV")) { // Jorge
 			fscanf(fd, "%s", arg);
-		} else if (COMMAND("CWD")) {
+		} else if (COMMAND("CWD")) { // Fran
 
-		} else if (COMMAND("STOR")) {
+		} else if (COMMAND("STOR")) { // Jorge
 
-		} else if (COMMAND("SYST")) {
+		} else if (COMMAND("SYST")) { // Fran
 
-		} else if (COMMAND("TYPE")) {
+		} else if (COMMAND("TYPE")) { // Jorge
 
-		} else if (COMMAND("RETR")) {
+		} else if (COMMAND("RETR")) { // Fran
 
-		} else if (COMMAND("QUIT")) {
-
-		} else if (COMMAND("LIST")) {
+		} else if (COMMAND("QUIT")) { // Jorge
+			fprintf(fd, "221 Service closing control connection. Goodbye.\n");
+			exit = true;
+		} else if (COMMAND("LIST")) { // Fran
 
 		} else {
 			fprintf(fd, "502 Command not implemented.\n");
 			fflush(fd);
-			printf("Comando : %s %s\n", command, arg);
-			printf("Error interno del servidor\n"); // TODO: sustituir por salida de error
+			std::cerr << "Comando recibido: " << command << arg << std::endl;
+			std::cerr << "Error interno del servidor" << std::endl;
 		}
 	}
 	fclose(fd);
+}
+
+int ClientConnection::id() {
+	return control_socket;
 };

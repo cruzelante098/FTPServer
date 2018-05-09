@@ -1,7 +1,9 @@
+#include <iostream>
+#include <FTPServer.h>
 #include "ClientConnection.h"
 #include "common.h"
 
-int define_socket_TCP(uint16_t port, const std::string &ip) {
+int define_socket_TCP(uint16_t port, const std::string& ip) {
 	const int MAX_INCOMING_CONNECTIONS = 2; // TODO: comprobar que funciona para dos personas y no para 3
 
 	int id = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
@@ -17,7 +19,7 @@ int define_socket_TCP(uint16_t port, const std::string &ip) {
 	else
 		inet_aton(ip.c_str(), &address.sin_addr);
 
-	ssize_t result = bind(id, reinterpret_cast<const sockaddr *>(&address), sizeof(address));
+	ssize_t result = bind(id, reinterpret_cast<const sockaddr*>(&address), sizeof(address));
 	if (result < 0)
 		throw std::system_error(errno, std::_V2::system_category(), "bind fail");
 
@@ -29,22 +31,38 @@ int define_socket_TCP(uint16_t port, const std::string &ip) {
 	return id;
 }
 
-void *run_client_connection(void *c) {
-	auto connection = (ClientConnection *) c;
+void* run_client_connection(void* c) {
+	// Signal blocking
+	sigset_t sigset{};
+	sigfillset(&sigset);
+	pthread_sigmask(SIG_BLOCK, &sigset, nullptr);
+
+	auto connection = static_cast<ClientConnection*>(c);
 	connection->waitForRequests();
+
+	--clients;
+	std::cout << "Cliente " << connection->id() << " desconectado. Conectados: " << clients << std::endl;
+
 	return nullptr;
 }
 
 int connectTCP(uint32_t address, uint16_t port) {
 	in_addr temp{.s_addr = address};
 	char* ipAddress = inet_ntoa(temp);
-	if(ipAddress == nullptr){
+	if (ipAddress == nullptr) {
 		std::cerr << "Aquí va un mensaje de error\n"; //TODO
 		return -1;
 	}
-	define_socket_TCP(port,std::string(ipAddress));
-	// TODO: Implement your code to define a socket here
-	return -1; // TODO: You must return the socket descriptor. // TODO: You must return the socket descriptor.
+	define_socket_TCP(port, std::string(ipAddress));
+	return -1; // TODO: You must return the socket descriptor.
+}
 
-	// TODO: esta función es necesaria?
+extern "C" void sighandler(int signum, siginfo_t* info, void* ucontext) {
+	std::cout << " -- Signal " << strsignal(signum) << " intercepted" << std::endl;
+	server->stop();
+	exit(0);
+}
+
+void exit_handler() {
+	server->stop();
 }

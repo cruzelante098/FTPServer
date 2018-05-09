@@ -3,13 +3,12 @@
 
 #include <pthread.h>
 
-#include <cstdio>
 #include <cstdint>
-
 #include <cstring>
 #include <cstdarg>
 #include <cstdio>
 #include <cerrno>
+
 #include <netdb.h>
 
 #include <sys/types.h>
@@ -45,6 +44,7 @@ public:
 	~ClientConnection();
 	void waitForRequests();
 	void stop();
+	int id();
 
 private:
 

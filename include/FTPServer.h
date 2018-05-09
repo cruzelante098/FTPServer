@@ -21,14 +21,18 @@
 
 class FTPServer {
 public:
-	explicit FTPServer(int port = 2121);
+	explicit FTPServer(uint16_t port = 2121);
 	void run();
 	void stop();
 
 private:
-	int port;
+	uint16_t port;
 	int msock;
 	std::list<ClientConnection*> connection_list;
+	std::list<pthread_t> threads;
 };
+
+extern FTPServer* server;
+extern int clients;
 
 #endif
