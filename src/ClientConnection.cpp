@@ -57,23 +57,34 @@ void ClientConnection::waitForRequests() {
 	while (!exit) {
 		fscanf(fd, "%s", command);
 		if (COMMAND("USER")) {
+
 			fscanf(fd, "%s", arg);
 			fprintf(fd, "331 User name ok, need password.\n");
+
 		} else if (COMMAND("PWD") || COMMAND("XPWD")) {
+
 			char cwd[200];
 			if (!getcwd(cwd, 200)) {
 				fprintf(fd, "550 Requested action not taken.\n");
 				std::cerr << "ERROR: PWD: " << strerror(errno) << std::endl;
 			} else
 				fprintf(fd, "257 \"%s\" is the current directory.\n", cwd);
+
 		} else if (COMMAND("PASS")) {
+
 			fscanf(fd, "%s", arg);
 			fprintf(fd, "230 User logged in, proceed.\n");
+
 		} else if (COMMAND("PORT")) { // Fran
 
 		} else if (COMMAND("PASV")) { // Jorge
+
 			fscanf(fd, "%s", arg);
+            fprintf(fd, "227 Entering Passive Mode (h1,h2,h3,h4,p1,p2)\n");
+
 		} else if (COMMAND("CWD")) { // Fran
+
+            fprintf(fd, "250. Requested file action okay, completed.\n");
 
 		} else if (COMMAND("STOR")) { // Jorge
 
@@ -84,8 +95,10 @@ void ClientConnection::waitForRequests() {
 		} else if (COMMAND("RETR")) { // Fran
 
 		} else if (COMMAND("QUIT")) { // Jorge
+
 			fprintf(fd, "221 Service closing control connection. Goodbye.\n");
-			exit = true;
+			stop();
+
 		} else if (COMMAND("LIST")) { // Fran
 
 		} else {
