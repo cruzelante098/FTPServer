@@ -32,6 +32,9 @@
 
 #include "common.h"
 
+/**
+ * Compares @a cmd with the received @a command
+ */
 #define COMMAND(cmd) strcmp(command, cmd)==0
 
 const int MAX_BUFF = 1000;
@@ -39,11 +42,8 @@ const int MAX_BUFF = 1000;
 class ClientConnection {
 public:
 	explicit ClientConnection(int socket_id);
-
 	~ClientConnection();
-
 	void waitForRequests();
-
 	void stop();
 
 private:

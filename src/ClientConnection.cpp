@@ -10,7 +10,7 @@
 #include "ClientConnection.h"
 
 ClientConnection::ClientConnection(int socket_id) {
-	auto sock = socket_id;
+	auto sock = socket_id; // TODO: para que es esto?
 	char buffer[MAX_BUFF];
 	control_socket = socket_id;
 
