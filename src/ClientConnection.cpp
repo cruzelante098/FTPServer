@@ -54,22 +54,27 @@ void ClientConnection::waitForRequests() {
 		return;
 
 	fprintf(fd, "220 Service ready\n");
+
 	while (!exit) {
 		fscanf(fd, "%s", command);
-		if (COMMAND("USER")) // Identifica al usuario con su username
-		{
+		if (COMMAND("USER")) {
+			// Identifica al usuario con su username
 			fscanf(fd, "%s", arg);
 			fprintf(fd, "331 User name ok, need password\n");
-		} else if (COMMAND("PWD")) // Imprime el directorio de trabajo donde actualmente se encuentra el usuario
-		{
-
-		} else if (COMMAND("PASS")) //
-		{
-
+		} else if (COMMAND("PWD") || COMMAND("XPWD")) {
+			// Imprime el directorio de trabajo donde actualmente se encuentra el usuario
+			char cwd[200];
+			if(!getcwd(cwd, 200))
+				fprintf(fd, "550 Requested action not taken\n");
+			else
+				fprintf(fd, "%s\n", cwd);
+		} else if (COMMAND("PASS")) {
+			fscanf(fd, "%s", arg);
+			fprintf(fd, "230 User logged in, proceed\n");
 		} else if (COMMAND("PORT")) {
 
 		} else if (COMMAND("PASV")) {
-
+			fscanf(fd, "%s", arg);
 		} else if (COMMAND("CWD")) {
 
 		} else if (COMMAND("STOR")) {

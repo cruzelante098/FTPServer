@@ -1,6 +1,5 @@
 #include "FTPServer.h"
 
-
 FTPServer::FTPServer(int port) {
 	this->port = port;
 }
@@ -11,14 +10,21 @@ void FTPServer::stop() {
 }
 
 
-// Starting of the server
 void FTPServer::run() {
 	struct sockaddr_in clientAddress{};
 	int clientIdSocket;
 	socklen_t alen = sizeof(clientAddress);
-	msock = define_socket_TCP(port);  // TODO: This function must be implemented by you.
 
-	// Los pragma son para que el IDE no de advertencias sobre el bucle infinito.
+	// TODO: Mejorar la gestión de errores
+	try {
+		msock = define_socket_TCP(port);
+	}
+	catch (std::exception &e) {
+		std::cout << e.what() << std::endl;
+		throw e;
+	}
+
+	// Los pragma son para que el IDE no de advertencias sobre bucle infinito
 	#pragma clang diagnostic push
 	#pragma clang diagnostic ignored "-Wmissing-noreturn"
 

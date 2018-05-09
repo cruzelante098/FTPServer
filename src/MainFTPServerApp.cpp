@@ -15,13 +15,12 @@ void exit_handler() {
 	server->stop();
 }
 
-
 int main(int argc, char **argv) {
-	struct sigaction action;
+	struct sigaction action{};
 	action.sa_sigaction = sighandler;
 	action.sa_flags = SA_SIGINFO;
 	sigaction(SIGINT, &action, nullptr);
-	server = new FTPServer();
+	server = new FTPServer(2121);
 	atexit(exit_handler);   // TODO: reejecución de server->stop() por signhandler (?)
 	server->run();
 }

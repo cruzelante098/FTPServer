@@ -15,7 +15,7 @@ inline void errexit(const char *format, ...) {
 
 int connectTCP(uint32_t address, uint16_t port);
 
-int define_socket_TCP(int port);
+int define_socket_TCP(uint16_t port, const std::string &ip = "");
 
 /**
  * This function is executed when the thread is executed.
