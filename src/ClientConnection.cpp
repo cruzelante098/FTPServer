@@ -97,7 +97,7 @@ void ClientConnection::waitForRequests() {
 
 		} else if (COMMAND("PASV")) { // Jorge
 
-            data_socket = define_socket_TCP(0,"");
+            data_socket = define_socket_TCP(0,"127.0.0.1");
             sockaddr_in address{};
             socklen_t len = sizeof(address);
             if(getsockname(data_socket, reinterpret_cast<sockaddr *>(&address), &len) < 0){
@@ -106,7 +106,7 @@ void ClientConnection::waitForRequests() {
             int puerto = address.sin_port;
             char* ip = inet_ntoa(address.sin_addr);
             fprintf(fd, "227 Entering Passive Mode (%s,%s,%s,%s,%i,%i)\n",
-                    std::strtok(ip,"."),std::strtok(nullptr,"."),std::strtok(nullptr,"."),std::strtok(nullptr,"."),puerto/256,puerto%256);
+                    std::strtok(ip,"."),std::strtok(nullptr,"."),std::strtok(nullptr,"."),std::strtok(nullptr,"."),puerto%256,puerto/256);
 
 		} else if (COMMAND("CWD")) {
 
@@ -129,17 +129,20 @@ void ClientConnection::waitForRequests() {
             if(id_archivo==-1)
                 throw -1;
 
-        } else if (COMMAND("SYST")) { // Fran
+        } else if (COMMAND("SYST")) {
 
             fprintf(fd, "215 UNIX Type : L8\n");
 
-        } else if (COMMAND("TYPE")) { // Jorge
+        } else if (COMMAND("TYPE")) {
+
+            fprintf(fd, "200 Command okay.\n");
 
 		} else if (COMMAND("RETR")) { // Fran
 
 		} else if (COMMAND("QUIT")) { // Jorge
 
 			fprintf(fd, "221 Service closing control connection. Goodbye.\n");
+            stop();
 
 		} else if (COMMAND("LIST")) {
 
