@@ -45,10 +45,10 @@ void FTPServer::run() {
 		// Debug log
 		++clients;
 		std::cout << "Nuevo cliente";
-		std::cout << "   IP: " << inet_ntoa(client_address.sin_addr);
-		std::cout << "   Puerto: " << ntohs(client_address.sin_port);
-		std::cout << "   ID: " << client_socket << std::endl;
-		std::cout << "Conectados: " << clients << std::endl;
+		std::cout << "    IP: " << inet_ntoa(client_address.sin_addr);
+		std::cout << "    Puerto: " << ntohs(client_address.sin_port);
+		std::cout << "    ID: " << client_socket;
+		std::cout << "    Conectados: " << clients << std::endl;
 
 		// Here a thread is created in order to process multiple requests simultaneously.
 		pthread_create(&thread, nullptr, run_client_connection, (void*) connection);

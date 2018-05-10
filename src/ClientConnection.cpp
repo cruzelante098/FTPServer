@@ -13,7 +13,6 @@ ClientConnection::ClientConnection(int socket_id) {
 	control_socket = socket_id;
 	char buffer[MAX_BUFF];
 
-	// TODO: Check the Linux man pages to know what fdopen does.
 	fd = fdopen(socket_id, "a+");
 
 	if (fd == nullptr) {
@@ -109,8 +108,9 @@ void ClientConnection::waitForRequests() {
             fprintf(fd, "227 Entering Passive Mode (%s,%s,%s,%s,%i,%i)\n",
                     std::strtok(ip,"."),std::strtok(nullptr,"."),std::strtok(nullptr,"."),std::strtok(nullptr,"."),puerto/256,puerto%256);
 
-		} else if (COMMAND("CWD")) { // Fran
+		} else if (COMMAND("CWD")) {
 
+			// TODO: implementar de verdad ?
 			fprintf(fd, "250 Requested file action okay, completed.\n");
 
 		} else if (COMMAND("STOR")) { // Jorge

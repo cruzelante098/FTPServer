@@ -20,6 +20,7 @@
 #include "common.h"
 #include "ClientConnection.h"
 
+// Forward declaration
 class ClientConnection;
 
 class FTPServer {

@@ -63,7 +63,7 @@ private:
 	int control_socket;      ///< Control socket descriptor;
 
 	bool ok; ///< This variable is flag that avoid that the server listens if initialization errors occured.
-	bool exit; // TODO: para que es esto?
+	bool exit; ///< Flag to end the waitForRequests() function
 };
 
 #endif
