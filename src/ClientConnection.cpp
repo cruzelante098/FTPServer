@@ -116,7 +116,18 @@ void ClientConnection::waitForRequests() {
 		} else if (COMMAND("STOR")) { // Jorge
 
             fscanf(fd, "%s", arg);
-            
+            /*DIR* archivo = opendir(arg);
+            if(errno == ENOENT){
+                int error = mkdir(arg,(mode_t)0777); //TODO: estos permisos?
+                if(error == -1)
+                    throw -1; //TODO: mejorar manejo de errores
+            } else if (!archivo){
+                throw -1;
+            }
+            */
+            int id_archivo = open(arg, O_RDWR | O_CREAT, (mode_t)0777); //quizas alguna mas seria interesante
+            if(id_archivo==-1)
+                throw -1;
 
         } else if (COMMAND("SYST")) { // Fran
 
@@ -129,7 +140,6 @@ void ClientConnection::waitForRequests() {
 		} else if (COMMAND("QUIT")) { // Jorge
 
 			fprintf(fd, "221 Service closing control connection. Goodbye.\n");
-			stop();
 
 		} else if (COMMAND("LIST")) { // Fran
 
