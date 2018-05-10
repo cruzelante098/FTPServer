@@ -46,13 +46,17 @@ void* run_client_connection(void* c) {
 }
 
 int connectTCP(uint32_t address, uint16_t port) {
-	in_addr temp{.s_addr = address};
-	char* ipAddress = inet_ntoa(temp);
-	if (ipAddress == nullptr) {
-		std::cerr << "Aquí va un mensaje de error\n"; //TODO
-		return -1;
-	}
-	return define_socket_TCP(port, std::string(ipAddress));
+	sockaddr_in client_address{
+		.sin_family = AF_INET,
+		.sin_port = htons(port),
+	};
+
+	client_address.sin_addr.s_addr = htonl(address);
+
+	int socket_id = define_socket_TCP(2020, "127.0.0.1");
+	if(socket_id < 0) return -1;
+
+	return connect(socket_id, reinterpret_cast<sockaddr*>(&client_address), sizeof client_address);
 }
 
 extern "C" void sighandler(int signum, siginfo_t* info, void* ucontext) {

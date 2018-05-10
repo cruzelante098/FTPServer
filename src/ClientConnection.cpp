@@ -7,7 +7,6 @@
 // 
 //****************************************************************************
 
-#include <err.h>
 #include "ClientConnection.h"
 
 ClientConnection::ClientConnection(int socket_id) {
@@ -52,7 +51,6 @@ void ClientConnection::stop() {
 void ClientConnection::waitForRequests() {
 	if (!ok)
 		return;
-
 	fprintf(fd, "220 Service ready.\n");
 	//	login();
 	// TODO: meter en funciones
@@ -68,7 +66,7 @@ void ClientConnection::waitForRequests() {
 			char cwd[200];
 			if (!getcwd(cwd, 200)) {
 				fprintf(fd, "550 Requested action not taken.\n");
-				std::cerr << "[ERROR] PWD: " << strerror(errno) << std::endl;
+				std::cerr << "[ERROR]" << "{" << id() << "} PWD: " << strerror(errno) << std::endl;
 			} else
 				fprintf(fd, "257 \"%s\" is the current directory.\n", cwd);
 
@@ -79,21 +77,23 @@ void ClientConnection::waitForRequests() {
 
 		} else if (COMMAND("PORT")) {
 
-			std::array<uint32_t, 4> ip;
-			std::array<uint16_t, 2> port;
+			std::array<uint32_t, 4> ip{};
+			std::array<uint16_t, 2> port{};
 			fscanf(fd, "%d,%d,%d,%d,%hi,%hi", &ip[0], &ip[1], &ip[2], &ip[3], &port[0], &port[1]);
 
-			uint32_t ip_bin = ip[3] << 24 | ip[2] << 16 | ip[1] << 8 | ip[0];
+			uint32_t ip_bin   = ip[3] << 24 | ip[2] << 16 | ip[1] << 8 | ip[0];
 			uint16_t port_bin = port[1] << 8 | port[0];
 
+			int oldsocket = data_socket;
 			data_socket = connectTCP(ip_bin, port_bin);
 
 			if (data_socket < 0) {
 				//fprintf(fd, "425 Can’t open data connection.\n"); // TODO: revisar el mensaje
 				fprintf(fd, "550 Requested action not taken.\n");
-				std::cerr << "[ERROR] PORT: " << strerror(errno) << std::endl;
+				std::cerr << "[ERROR]" << "{" << id() << "}  PORT: " << strerror(errno) << std::endl;
 			} else {
 				fprintf(fd, "200 Command okay.\n");
+				if(oldsocket != -1) close(oldsocket);
 			}
 
 		} else if (COMMAND("PASV")) { // Jorge
@@ -102,7 +102,7 @@ void ClientConnection::waitForRequests() {
             sockaddr_in address{};
             socklen_t len = sizeof(address);
             if(getsockname(data_socket, reinterpret_cast<sockaddr *>(&address), &len) < 0){
-                std::cerr << strerror(errno) << "\n";
+                std::cerr << "[ERROR]" << "{" << id() << "} " << strerror(errno) << "\n";
             }
             int puerto = address.sin_port;
             char* ip = inet_ntoa(address.sin_addr);
@@ -141,15 +141,40 @@ void ClientConnection::waitForRequests() {
 
 			fprintf(fd, "221 Service closing control connection. Goodbye.\n");
 
-		} else if (COMMAND("LIST")) { // Fran
+		} else if (COMMAND("LIST")) {
 
-            fprintf(fd, "200 List okay.\n");
+			std::array<int, 2> pipefd{};
+			if(pipe(pipefd.data()) != 0)
+				throw std::system_error(errno, std::system_category(), "pipe failed");
+
+			std::array<char, 9000> buffer{};
+			const int& child_output = pipefd[0];
+			const int& parent_input = pipefd[1];
+
+			pid_t pid = fork();
+
+			if (pid == 0) {
+				close(child_output);
+				if (dup2(parent_input, STDOUT_FILENO) < 0 || dup2(parent_input, STDERR_FILENO) < 0)
+					throw std::system_error(errno, std::system_category(), "dup2 failed");
+				if (execlp("bash", "bash", "-c", "ls -l", nullptr) == -1)
+					throw std::system_error(errno, std::system_category(), "execlp failed");
+			}
+			else if (pid > 0) {
+				close(parent_input);
+				read(child_output, buffer.data(), buffer.size());
+				//std::cout << std::endl << buffer.data() << std::endl;
+				wait(nullptr);
+			}
+			else
+				throw std::system_error(errno, std::system_category(), "fork() failed");
+			fprintf(fd, "200 List okay.\n");
+			fprintf(fd, "%s\n", buffer.data());
 
 		} else {
 			fprintf(fd, "502 Command not implemented.\n");
 			fflush(fd);
-			std::cerr << "Comando recibido: " << command << arg << std::endl;
-			std::cerr << "Error interno del servidor" << std::endl;
+			std::cerr << "[ERROR]" << "{" << id() << "} " << "Comando recibido no reconocido: " << command << arg << std::endl;
 		}
 	}
 	fclose(fd);

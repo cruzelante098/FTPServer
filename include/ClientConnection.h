@@ -8,9 +8,11 @@
 #include <cstdarg>
 #include <cstdio>
 #include <cerrno>
+#include <err.h>
 
 #include <netdb.h>
 
+#include <sys/wait.h>
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
