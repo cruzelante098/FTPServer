@@ -6,7 +6,8 @@
 #include <cstdio>
 
 #include <list>
-
+#include <vector>
+#include <iomanip>
 #include <netdb.h>
 #include <unistd.h>
 #include <pthread.h>
@@ -18,6 +19,8 @@
 
 #include "common.h"
 #include "ClientConnection.h"
+
+class ClientConnection;
 
 class FTPServer {
 public:

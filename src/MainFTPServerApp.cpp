@@ -1,6 +1,6 @@
 #include <iostream>
 #include <cstdlib>
-#include <cygwin/signal.h>
+#include <signal.h>
 
 #include "FTPServer.h"
 

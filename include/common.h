@@ -2,7 +2,10 @@
 #define COMMON_H
 
 #include <cstdlib>
+#include <iostream>
+#include <signal.h>
 
+#include "FTPServer.h"
 #include "ClientConnection.h"
 
 inline void errexit(const char* format, ...) {
