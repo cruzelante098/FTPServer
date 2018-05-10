@@ -1,4 +1,5 @@
 #include <vector>
+#include <iomanip>
 #include "FTPServer.h"
 
 FTPServer* server;
@@ -11,8 +12,7 @@ void FTPServer::stop() {
 	shutdown(msock, SHUT_RDWR);
 
 	// Close clients connection threads
-	for(auto&& thread : threads)
-	{
+	for (auto&& thread : threads) {
 		pthread_cancel(thread);
 		pthread_detach(thread);
 	}
@@ -20,38 +20,35 @@ void FTPServer::stop() {
 
 
 void FTPServer::run() {
-	struct sockaddr_in clientAddress{};
-	int clientIdSocket;
-	socklen_t alen = sizeof(clientAddress);
+	struct sockaddr_in client_address{};
+	int client_socket;
+	socklen_t alen = sizeof(client_address);
 
-	// TODO: Mejorar la gestión de errores
-	try {
-		msock = define_socket_TCP(port);
-	}
-	catch (std::exception& e) {
-		std::cout << e.what() << std::endl;
-		throw e;
-	}
+	msock = define_socket_TCP(port);
+	if (msock < 0)
+		throw std::system_error(errno, std::system_category(), strerror(errno));
 
 	// Los pragma son para que el IDE no de advertencias sobre bucle infinito
 	#pragma clang diagnostic push
 	#pragma clang diagnostic ignored "-Wmissing-noreturn"
 
 	while (true) {
-		pthread_t thread; // TODO: guardar los hilos para cancelación posterior!!!!!!
-		clientIdSocket = accept(msock, (struct sockaddr*) &clientAddress, &alen);
+		pthread_t thread;
+		client_socket = accept(msock, (struct sockaddr*) &client_address, &alen);
 
 		// TODO: controlar el error de cuando se supera la cola de direcciones.
-		if (clientIdSocket < 0)
-			errexit("Fallo en el accept: %s\n", strerror(errno));
+		if (client_socket < 0)
+			errexit("Fallo en el accept: %s\n", strerror(errno)); // TODO: Por qué usar errexit?
 
-		auto connection = new ClientConnection(clientIdSocket);
+		auto connection = new ClientConnection(client_socket);
 		connection_list.push_back(connection);
 
 		// Debug log
 		++clients;
-		std::cout << "Cliente: " << inet_ntoa(clientAddress.sin_addr) << ":" << ntohs(clientAddress.sin_port) << " -- ";
-		std::cout << "ID: " << clientIdSocket << std::endl;
+		std::cout << "Nuevo cliente";
+		std::cout << "   IP: " << inet_ntoa(client_address.sin_addr);
+		std::cout << "   Puerto: " << ntohs(client_address.sin_port);
+		std::cout << "   ID: " << client_socket << std::endl;
 		std::cout << "Conectados: " << clients << std::endl;
 
 		// Here a thread is created in order to process multiple requests simultaneously.

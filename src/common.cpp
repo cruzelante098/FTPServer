@@ -8,7 +8,7 @@ int define_socket_TCP(uint16_t port, const std::string& ip) {
 
 	int id = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
 	if (id < 0)
-		throw std::system_error(errno, std::_V2::system_category(), "ERROR: Socket couldn't be created");
+		return -1;
 
 	sockaddr_in address{};
 	address.sin_family = AF_INET;
@@ -21,12 +21,11 @@ int define_socket_TCP(uint16_t port, const std::string& ip) {
 
 	ssize_t result = bind(id, reinterpret_cast<const sockaddr*>(&address), sizeof(address));
 	if (result < 0)
-		throw std::system_error(errno, std::_V2::system_category(), "bind fail");
+		return -1;
 
 	result = listen(id, MAX_INCOMING_CONNECTIONS); // TODO: es necesario hacer el listen?
 	if (result < 0)
-		// TODO: Es buena idea hacer un throw en esta función?
-		throw std::system_error(errno, std::_V2::system_category(), "listen fail");
+		return -1;
 
 	return id;
 }
@@ -53,8 +52,7 @@ int connectTCP(uint32_t address, uint16_t port) {
 		std::cerr << "Aquí va un mensaje de error\n"; //TODO
 		return -1;
 	}
-	define_socket_TCP(port, std::string(ipAddress));
-	return -1; // TODO: You must return the socket descriptor.
+	return define_socket_TCP(port, std::string(ipAddress));
 }
 
 extern "C" void sighandler(int signum, siginfo_t* info, void* ucontext) {

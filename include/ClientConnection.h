@@ -2,7 +2,7 @@
 #define CLIENT_CONNECTION_H
 
 #include <pthread.h>
-
+#include <array>
 #include <cstdint>
 #include <cstring>
 #include <cstdarg>

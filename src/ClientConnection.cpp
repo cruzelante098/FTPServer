@@ -9,7 +9,8 @@
 
 #include "ClientConnection.h"
 
-ClientConnection::ClientConnection(int socket_id) : control_socket(socket_id) {
+ClientConnection::ClientConnection(int socket_id) {
+	control_socket = socket_id;
 	char buffer[MAX_BUFF];
 
 	// TODO: Check the Linux man pages to know what fdopen does.
@@ -66,7 +67,7 @@ void ClientConnection::waitForRequests() {
 			char cwd[200];
 			if (!getcwd(cwd, 200)) {
 				fprintf(fd, "550 Requested action not taken.\n");
-				std::cerr << "ERROR: PWD: " << strerror(errno) << std::endl;
+				std::cerr << "[ERROR] PWD: " << strerror(errno) << std::endl;
 			} else
 				fprintf(fd, "257 \"%s\" is the current directory.\n", cwd);
 
@@ -75,17 +76,32 @@ void ClientConnection::waitForRequests() {
 			fscanf(fd, "%s", arg);
 			fprintf(fd, "230 User logged in, proceed.\n");
 
-		} else if (COMMAND("PORT")) { // Fran
+		} else if (COMMAND("PORT")) {
+
+			std::array<uint32_t, 4> ip;
+			std::array<uint16_t, 2> port;
+			fscanf(fd, "%d,%d,%d,%d,%hi,%hi", &ip[0], &ip[1], &ip[2], &ip[3], &port[0], &port[1]);
+
+			uint32_t ip_bin = ip[3] << 24 | ip[2] << 16 | ip[1] << 8 | ip[0];
+			uint16_t port_bin = port[1] << 8 | port[0];
+
+			data_socket = connectTCP(ip_bin, port_bin);
+
+			if (data_socket < 0) {
+				//fprintf(fd, "425 Can’t open data connection.\n"); // TODO: revisar el mensaje
+				fprintf(fd, "550 Requested action not taken.\n");
+				std::cerr << "[ERROR] PORT: " << strerror(errno) << std::endl;
+			} else {
+				fprintf(fd, "200 Command okay.\n");
+			}
 
 		} else if (COMMAND("PASV")) { // Jorge
 
 			fscanf(fd, "%s", arg);
-            fprintf(fd, "227 Entering Passive Mode (h1,h2,h3,h4,p1,p2)\n");
+			fprintf(fd, "227 Entering Passive Mode (h1,h2,h3,h4,p1,p2)\n");
 
 		} else if (COMMAND("CWD")) { // Fran
-
-            fprintf(fd, "250. Requested file action okay, completed.\n");
-
+			fprintf(fd, "250 Requested file action okay, completed.\n");
 		} else if (COMMAND("STOR")) { // Jorge
 
 		} else if (COMMAND("SYST")) { // Fran
@@ -113,4 +129,5 @@ void ClientConnection::waitForRequests() {
 
 int ClientConnection::id() {
 	return control_socket;
-};
+}
+
