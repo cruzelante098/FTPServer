@@ -2,7 +2,7 @@
 #include "FTPServer.h"
 
 FTPServer* server;
-int clients = 0;
+int connected_clients = 0;
 
 FTPServer::FTPServer(uint16_t port) : port(port) {}
 
@@ -23,7 +23,7 @@ void FTPServer::run() {
 	int client_socket;
 	socklen_t alen = sizeof(client_address);
 
-	msock = define_socket_TCP(port);
+	msock = createTcpSocket(LISTEN_MODE, port);
 	if (msock < 0)
 		throw std::system_error(errno, std::system_category(), strerror(errno));
 
@@ -43,15 +43,15 @@ void FTPServer::run() {
 		connection_list.push_back(connection);
 
 		// Debug log
-		++clients;
+		++connected_clients;
 		std::cout << "Nuevo cliente";
 		std::cout << "    IP: " << inet_ntoa(client_address.sin_addr);
 		std::cout << "    Puerto: " << ntohs(client_address.sin_port);
 		std::cout << "    ID: " << client_socket;
-		std::cout << "    Conectados: " << clients << std::endl;
+		std::cout << "    Conectados: " << connected_clients << std::endl;
 
 		// Here a thread is created in order to process multiple requests simultaneously.
-		pthread_create(&thread, nullptr, run_client_connection, (void*) connection);
+		pthread_create(&thread, nullptr, runClientConnection, (void*) connection);
 		threads.push_back(thread);
 	}
 

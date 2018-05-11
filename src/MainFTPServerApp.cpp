@@ -14,7 +14,7 @@ int main(int argc, char** argv) {
 	sigaction(SIGHUP, &action, nullptr);
 	sigaction(SIGQUIT, &action, nullptr);
 
-	atexit(exit_handler);   // TODO: reejecución de server->stop() por signhandler (?)
+	atexit(exitHandler);   // TODO: reejecución de server->stop() por signhandler (?)
 
 	// Creación del servidor
 	server = new FTPServer(2121);

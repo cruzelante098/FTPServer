@@ -64,6 +64,11 @@ private:
 
 	bool ok; ///< This variable is flag that avoid that the server listens if initialization errors occured.
 	bool exit; ///< Flag to end the waitForRequests() function
+
+private:
+	void logError(const std::string& error_str);
+	int cmdPort();
+	int cmdPasv(uint16_t& port, char** ip);
 };
 
 #endif

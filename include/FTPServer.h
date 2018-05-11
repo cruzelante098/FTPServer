@@ -37,6 +37,6 @@ private:
 };
 
 extern FTPServer* server;
-extern int clients;
+extern int connected_clients;
 
 #endif
