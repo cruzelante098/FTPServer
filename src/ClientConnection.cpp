@@ -55,6 +55,7 @@ void ClientConnection::waitForRequests() {
 		return;
 
 	fprintf(fd, "220 Service ready.\n");
+	fflush(fd);
 
 	while (!exit) {
 		std::fill(command, command + MAX_BUFF, 0);
@@ -67,6 +68,7 @@ void ClientConnection::waitForRequests() {
 			fscanf(fd, "%s", arg);
 			username = arg;
 			fprintf(fd, "331 User name ok, need password.\n");
+			fflush(fd);
 
 		} else if (COMMAND("PWD") || COMMAND("XPWD")) {
 
@@ -77,6 +79,7 @@ void ClientConnection::waitForRequests() {
 				fprintf(fd, "501 Syntax error in parameters or arguments.\n");
 			else
 				fprintf(fd, "257 \"%s\" is the current directory.\n", cwd);
+			fflush(fd);
 
 		} else if (COMMAND("PASS")) {
 
@@ -91,6 +94,7 @@ void ClientConnection::waitForRequests() {
 			} else {
 				fprintf(fd, "332 Need account for login.\n");
 			}
+			fflush(fd);
 
 		} else if (COMMAND("PORT")) {
 
@@ -99,6 +103,7 @@ void ClientConnection::waitForRequests() {
 			} else {
 				fprintf(fd, "200 Command okay.\n");
 			}
+			fflush(fd);
 
 		} else if (COMMAND("PASV")) {
 
@@ -115,6 +120,7 @@ void ClientConnection::waitForRequests() {
 		} else if (COMMAND("CWD")) {
 
 			fprintf(fd, "250 Requested file action okay, completed.\n");
+			fflush(fd);
 
 		} else if (COMMAND("STOR")) {
 
@@ -125,16 +131,17 @@ void ClientConnection::waitForRequests() {
 					fprintf(fd, "501 Syntax error in parameters or arguments.\n");
 					throw -1;
 				}
-
+				fflush(fd);
 				char cwd[200];
 				getcwd(cwd, 200);
 				std::string ruta = std::string(cwd) + '/' + arg;
 
-				int id_archivo = open(arg, O_RDWR | O_CREAT | O_TRUNC, (mode_t) 0777);
+				int id_archivo = open(ruta.c_str(), O_RDWR | O_CREAT | O_TRUNC, (mode_t) 0777);
 				if (id_archivo < 0) {
 					fprintf(fd, "451 Requested action aborted. Local error in processing.\n");
 					throw -1; //TODO: gestionar excepcion
 				}
+				fflush(fd);
 
 				fprintf(fd, "150 File status okay; about to open data connection.\n");
 				fflush(fd);
@@ -165,55 +172,66 @@ void ClientConnection::waitForRequests() {
 			} else {
 				fprintf(fd, "532 Need account for storing files.\n");
 			}
+			fflush(fd);
 
 		} else if (COMMAND("SYST")) {
 
 			fprintf(fd, "215 UNIX Type: L8.\n");
+			fflush(fd);
 
 		} else if (COMMAND("TYPE")) {
 
 			fprintf(fd, "200 Command okay.\n");
+			fflush(fd);
 
 		} else if (COMMAND("RETR")) { // Fran
 
 			fscanf(fd, "%s", arg);
 
-			std::string path;
-			path.reserve(200);
-			getcwd(&path[0], 200);
-			path += '/' + arg;
+			char cwd[200];
+			getcwd(cwd, 200);
+			std::string ruta = std::string(cwd) + '/' + arg;
 
-			int file_descriptor = open(arg, O_RDONLY, static_cast<mode_t>(0777));
+			int file_descriptor = open(ruta.c_str(), O_RDONLY, static_cast<mode_t>(0777));
 			if (file_descriptor < 0) {
 				fprintf(fd, "550 Requested action not taken.\n");
+				fflush(fd);
 				logError(strerror(errno), "open()");
 			} else {
-				fprintf(fd, "150"); // TODO:
-				char buffer[1024];
+				fprintf(fd, "150 File status okay; about to open data connection.\n");
+				fflush(fd);
+				char buffer[MAX_BUFF];
 				ssize_t bytes = 0;
 
-				while ((bytes = read(file_descriptor, buffer, 1024))) {
-					send(data_socket, buffer, (size_t) bytes, 0); // TODO: gestionar errores
+				while ((bytes = read(file_descriptor, buffer, MAX_BUFF))) {
+					ssize_t sended_bytes = send(data_socket, buffer, (size_t) bytes, 0);
+					if (sended_bytes < 0)
+						logError(strerror(errno), "send()");
 				}
 
-				fprintf(fd, "226"); // TODO:
 				close(file_descriptor);
+				close(data_socket);
+				fprintf(fd, "226 Closing data connection. Requested file action successful.\n"); // TODO:
+				fflush(fd);
 			}
 
 		} else if (COMMAND("QUIT")) {
 
 			fprintf(fd, "221 Service closing control connection. Goodbye.\n");
+			fflush(fd);
 			stop();
 
 		} else if (COMMAND("LIST")) {
 
 			std::string ls;
 
-			if (cmdList(ls) < 0)
+			if (cmdList(ls) < 0) {
 				fprintf(fd, "450 Requested file action not taken.\n");
-			else {
+				fflush(fd);
+			} else {
 				fprintf(fd, "150 File status okay; about to open data connection.\n");
 				fflush(fd);
+
 				if (sendAscii(ls) < 0) {
 					fprintf(fd, "451 Requested action aborted: local error in processing.\n");
 				} else
@@ -338,5 +356,6 @@ ssize_t ClientConnection::sendAscii(const std::string& str) {
 	ssize_t bytes = send(data_socket, str.c_str(), str.size(), 0); // TODO: gestionar errores
 	if (bytes < 0)
 		logError(strerror(errno), "send()");
+	close(data_socket);
 	return bytes;
 }
