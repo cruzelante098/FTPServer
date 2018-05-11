@@ -9,6 +9,7 @@
 #include <cstdio>
 #include <cerrno>
 #include <err.h>
+#include <sstream>
 
 #include <netdb.h>
 
@@ -55,6 +56,8 @@ private:
 	 * manage it as a C file usign fprintf, fscanf, etc.
 	 */
 	FILE *fd;
+
+    const std::string validUsername = "root";
 
 	char command[MAX_BUFF];  ///< Buffer for saving the command.
 	char arg[MAX_BUFF];      ///< Buffer for saving the arguments.

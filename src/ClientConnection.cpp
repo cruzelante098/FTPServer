@@ -48,6 +48,8 @@ void ClientConnection::stop() {
  * are allowed to add auxiliary methods if necessary.
  */
 void ClientConnection::waitForRequests() {
+    std::string username;
+    bool logged = false;
 	if (!ok)
 		return;
 	fprintf(fd, "220 Service ready.\n");
@@ -56,23 +58,38 @@ void ClientConnection::waitForRequests() {
 		if (COMMAND("USER")) {
 
 			fscanf(fd, "%s", arg);
+            username = arg;
 			fprintf(fd, "331 User name ok, need password.\n");
 
 		} else if (COMMAND("PWD") || COMMAND("XPWD")) {
 
 			char cwd[200];
 			getcwd(cwd, 200);
-			fprintf(fd, "257 \"%s\" is the current directory.\n", cwd);
+            fscanf(fd, "%s", arg);
+            if(!std::string(arg).empty()) //TODO: comprobar si es correcta
+                fprintf(fd, "501 Syntax error in parameters or arguments.\n");
+            else
+			    fprintf(fd, "257 \"%s\" is the current directory.\n", cwd);
 
 		} else if (COMMAND("PASS")) {
 
 			fscanf(fd, "%s", arg);
+            if(username==validUsername){
+                if(std::string(arg)=="1234"){
+                    fprintf(fd, "230 User logged in, proceed.\n");
+                    logged = true;
+                } else {
+                    fprintf(fd, "530 Not logged in.\n");
+                }
+            } else {
+                fprintf(fd, "332 Need account for login.\n");
+            }
 			fprintf(fd, "230 User logged in, proceed.\n");
 
 		} else if (COMMAND("PORT")) {
 
 			if (data_socket < 0) {
-				fprintf(fd, "550 Requested action not taken.\n");
+				fprintf(fd, "501 Syntax error in parameters or arguments.\n");
 				logError(strerror(errno));
 			} else {
 				fprintf(fd, "200 Command okay.\n");
@@ -84,7 +101,7 @@ void ClientConnection::waitForRequests() {
 			uint16_t port;
 
 			if (cmdPasv(port, ip) < 0)
-				fprintf(fd, "500 Syntax error, command unrecognized.\n");
+				fprintf(fd, "550 Requested action not taken.\n");
 			else
 				fprintf(fd, "227 Entering Passive Mode (%s,%s,%s,%s,%i,%i)\n",
 				        ip[0], ip[1], ip[2], ip[3], port % 256, port / 256);
@@ -97,42 +114,54 @@ void ClientConnection::waitForRequests() {
 
 		} else if (COMMAND("STOR")) { // Jorge
 
-			fscanf(fd, "%s", arg);
-			char cwd[200];
-			getcwd(cwd, 200);
-			std::string ruta = std::string(cwd) + '/' + arg;
+            if(logged) {
+                fscanf(fd, "%s", arg);
 
-			int id_archivo = open(arg, O_RDWR | O_CREAT | O_TRUNC, (mode_t) 0777);
-			if (id_archivo < 0)
-				throw -1; //TODO: gestionar excepcion
+                if (std::string(arg).find('/') != std::string::npos) {
+                    fprintf(fd, "501 Syntax error in parameters or arguments.\n");
+                    throw -1;
+                }
+
+                char cwd[200];
+                getcwd(cwd, 200);
+                std::string ruta = std::string(cwd) + '/' + arg;
+
+                int id_archivo = open(arg, O_RDWR | O_CREAT | O_TRUNC, (mode_t) 0777);
+                if (id_archivo < 0) {
+                    fprintf(fd, "451 Requested action aborted. Local error in processing.\n");
+                    throw -1; //TODO: gestionar excepcion
+                }
 
 
-			fprintf(fd, "150 File status okay; about to open data connection.\n");
-			fflush(fd);
+                fprintf(fd, "150 File status okay; about to open data connection.\n");
+                fflush(fd);
 
-			char buffer[MAX_BUFF];
-			ssize_t bytes = 0;
+                char buffer[MAX_BUFF];
+                ssize_t bytes = 0;
 
-			while ((bytes = recv(data_socket, buffer, sizeof(buffer), 0)) > 0) {
-				// Error in recv()
-				if (bytes == -1)
-					logError(std::string("recv(): ") + strerror(errno));
+                while ((bytes = recv(data_socket, buffer, sizeof(buffer), 0)) > 0) {
+                    // Error in recv()
+                    if (bytes == -1)
+                        logError(std::string("recv(): ") + strerror(errno));
 
-				ssize_t result = write(id_archivo, buffer, (size_t) bytes);
-				// Error in write()
-				if (result == -1)
-					logError(strerror(errno));
-				else if (result < bytes) {
-					std::stringstream ss;
-					ss << "write(): se ha escrito menos cantidad de la especificada: ";
-					ss << "escritos " << result << " de " << bytes;
-					logError(ss.str());
-				}
-			}
+                    ssize_t result = write(id_archivo, buffer, (size_t) bytes);
+                    // Error in write()
+                    if (result == -1)
+                        logError(strerror(errno));
+                    else if (result < bytes) {
+                        std::stringstream ss;
+                        ss << "write(): se ha escrito menos cantidad de la especificada: ";
+                        ss << "escritos " << result << " de " << bytes;
+                        logError(ss.str());
+                    }
+                }
 
-			fprintf(fd, "226 Closing data connection.\n");
-			fflush(fd);
-			close(id_archivo);
+                fprintf(fd, "226 Closing data connection.\n");
+                fflush(fd);
+                close(id_archivo);
+            } else{
+                fprintf(fd, "532 Need account for storing files.\n");
+            }
 
 		} else if (COMMAND("SYST")) {
 
