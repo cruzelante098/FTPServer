@@ -69,9 +69,12 @@ private:
 	bool exit; ///< Flag to end the waitForRequests() function
 
 private:
-	void logError(const std::string& error_str);
+	void logError(const std::string& error_str, const std::string& function = "unknown");
 	int cmdPort();
 	int cmdPasv(uint16_t& port, char** ip);
+	int cmdList(std::string& buffer);
+
+	ssize_t sendAscii(const std::string& str);
 };
 
 #endif
