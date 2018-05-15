@@ -5,18 +5,20 @@
 #include "FTPServer.h"
 
 int main(int argc, char** argv) {
-	// Gestión de señales
+
+	// Signal management
 	struct sigaction action{};
 	action.sa_sigaction = sighandler;
 	action.sa_flags = SA_SIGINFO;
-	sigaction(SIGINT, &action, nullptr);
-	sigaction(SIGTERM, &action, nullptr);
-	sigaction(SIGHUP, &action, nullptr);
-	sigaction(SIGQUIT, &action, nullptr);
 
-	atexit(exitHandler);   // TODO: reejecución de server->stop() por signhandler (?)
+	sigaction(SIGINT, &action, nullptr);    // Ctrl + C
+	sigaction(SIGTERM, &action, nullptr);   // Friendly shutdown
+	sigaction(SIGHUP, &action, nullptr);    // System shutdown
+	sigaction(SIGQUIT, &action, nullptr);   // Close window
 
-	// Creación del servidor
+	atexit(exitHandler);
+
+	// Run the server!
 	server = new FTPServer(2121);
 	server->run();
 }

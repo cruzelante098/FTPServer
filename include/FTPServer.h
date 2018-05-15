@@ -36,7 +36,14 @@ private:
 	std::list<pthread_t> threads;
 };
 
+/**
+ * Global var to execute the server
+ */
 extern FTPServer* server;
+
+/**
+ * Counts connected clients, increments if detects a new connection, decrements if detects that a connection is closed
+ */
 extern int connected_clients;
 
 #endif

@@ -29,12 +29,23 @@ void* runClientConnection(void* c) {
 	pthread_sigmask(SIG_BLOCK, &sigset, nullptr);
 
 	auto connection = static_cast<ClientConnection*>(c);
+
+	sockaddr_in address{};
+	socklen_t len = sizeof address;
+	if (getpeername(connection->id(), reinterpret_cast<sockaddr*>(&address), &len) < 0) {
+		std::cerr << "getpeername(): " << strerror(errno) << std::endl;
+	}
+
 	connection->waitForRequests();
 
 	// Reaching this point means the client connection ended
+
 	--connected_clients;
-	std::cout << "Client " << connection->id() << " has been disconnected.";
-	std::cout << "Connected clients: " << connected_clients << std::endl;
+	std::cout << "[EVENT] Disconnection ";
+	std::cout << " - IP: " << inet_ntoa(address.sin_addr);
+	std::cout << " - Port: " << ntohs(address.sin_port);
+	std::cout << " - Socket ID: " << connection->id();
+	std::cout << " <+> Connected: " << connected_clients << std::endl;
 
 	return nullptr; // TODO: Por qué?
 }

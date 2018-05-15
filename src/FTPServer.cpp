@@ -35,20 +35,19 @@ void FTPServer::run() {
 		pthread_t thread;
 		client_socket = accept(msock, (struct sockaddr*) &client_address, &alen);
 
-		// TODO: controlar el error de cuando se supera la cola de direcciones.
 		if (client_socket < 0)
-			errexit("Fallo en el accept: %s\n", strerror(errno)); // TODO: Por qué usar errexit?
+			errexit("Fallo en el accept: %s\n", strerror(errno));
 
 		auto connection = new ClientConnection(client_socket);
 		connection_list.push_back(connection);
 
 		// Debug log
 		++connected_clients;
-		std::cout << "Nuevo cliente";
-		std::cout << "    IP: " << inet_ntoa(client_address.sin_addr);
-		std::cout << "    Puerto: " << ntohs(client_address.sin_port);
-		std::cout << "    ID: " << client_socket;
-		std::cout << "    Conectados: " << connected_clients << std::endl;
+		std::cout << "[EVENT] New client ";
+		std::cout << " - IP: " << inet_ntoa(client_address.sin_addr);
+		std::cout << " - Port: " << ntohs(client_address.sin_port);
+		std::cout << " - Socket ID: " << client_socket;
+		std::cout << " <+> Connected: " << connected_clients << std::endl;
 
 		// Here a thread is created in order to process multiple requests simultaneously.
 		pthread_create(&thread, nullptr, runClientConnection, (void*) connection);
