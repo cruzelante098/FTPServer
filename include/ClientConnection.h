@@ -93,14 +93,7 @@ private:
 
 private:
 
-	/**
-	 * Print a message error in server's terminal
-	 * @param error_str describes the error (can be strerr(errno) for example)
-	 * @param function the function name that gave the error
-	 */
-	void logError(const std::string& error_str, const std::string& function = "unknown");
-
-	/*********** Command functions **********/
+	/**************** Command functions ***************/
 
 	int cmdPort();
 	int cmdPasv(uint16_t& port, char** ip);
@@ -111,23 +104,45 @@ private:
 	/*********** Auxiliary command functions **********/
 
 	/**
-	 * Opens a file using @c arg class attribute
+	 * Open a file for read only
 	 * @return the file descriptor if everything went well, -1 otherwise
 	 */
 	int openFileForReadOnly(const std::string& name);
 
+	/**
+	 * Open a file for read and write
+	 * @return the file descriptor if everything went well, -1 otherwise
+	 */
 	int openFileForReadAndWrite(const std::string& name);
 
 	/**
 	 * Send a string to client using data connection
 	 * @param data the message
-	 * @return the sent bytes, -1 if some error occurred
+	 * @return sent bytes, -1 if some error occurred
 	 */
 	ssize_t sendAscii(const std::string& data);
 
+	/**
+	 * Check if user is logged in the server
+	 * @return true if logged
+	 */
 	bool isLogged();
 
-	bool isThatAFile(const std::string& name);
+	/**
+	 * Check if the string constains any '/' (may indicate that the name contains a directory)
+	 * @param name
+	 * @return true if filename, false if detect a directory in the path
+	 */
+	bool isAFile(const std::string& name);
+
+	/****************** Other methods *****************/
+
+	/**
+	* Print a message error in server's terminal
+	* @param error_str describes the error (can be @c strerr(errno) for example)
+	* @param function the function name that gave the error
+	*/
+	void logError(const std::string& error_str, const std::string& function = "unknown");
 };
 
 #endif

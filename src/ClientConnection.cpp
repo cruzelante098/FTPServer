@@ -98,7 +98,7 @@ void ClientConnection::waitForRequests() {
 				fflush(fd);
 			} else {
 				fscanf(fd, "%s", arg);
-				if (!isThatAFile(arg)) {
+				if (!isAFile(arg)) {
 					fprintf(fd, "501 Syntax error in parameters or arguments.\n");
 					fflush(fd);
 				} else {
@@ -237,6 +237,8 @@ int ClientConnection::cmdPasv(uint16_t& port, char** ip) {
 		logError(strerror(errno), "accept()");
 		return -1;
 	}
+
+	return 0;
 }
 
 int ClientConnection::cmdList(std::string& data) {
@@ -388,7 +390,7 @@ bool ClientConnection::isLogged() {
 	return logged;
 }
 
-bool ClientConnection::isThatAFile(const std::string& name) {
+bool ClientConnection::isAFile(const std::string& name) {
 	return std::string(arg).find('/') == std::string::npos;
 }
 
