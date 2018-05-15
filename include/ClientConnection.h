@@ -96,14 +96,15 @@ private:
 	/**************** Command functions ***************/
 
 	int cmdPort();
-	int cmdPasv(uint16_t& port, char** ip);
 	int cmdList(std::string& data);
 	int cmdStor(int file_descriptor);
 	int cmdRetr(int file_descriptor);
 
 	/*********** Auxiliary command functions **********/
 
-	/**
+    int openListenPort(uint16_t &port, char **ip);
+
+    /**
 	 * Open a file for read only
 	 * @return the file descriptor if everything went well, -1 otherwise
 	 */
@@ -114,6 +115,8 @@ private:
 	 * @return the file descriptor if everything went well, -1 otherwise
 	 */
 	int openFileForReadAndWrite(const std::string& name);
+
+    int acceptIncomingConnection(int sockid);
 
 	/**
 	 * Send a string to client using data connection
