@@ -7,5 +7,6 @@ set(SOURCE_FILES src/ClientConnection.cpp src/MainFTPServerApp.cpp src/FTPServer
 set(HEADER_FILES include/ClientConnection.h include/common.h include/FTPServer.h)
 
 include_directories(include/)
-
+find_package (Threads)
 add_executable(FTPServer ${SOURCE_FILES} ${HEADER_FILES})
+target_link_libraries (FTPServer ${CMAKE_THREAD_LIBS_INIT})
